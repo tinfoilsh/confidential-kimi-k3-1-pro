@@ -13,7 +13,7 @@ models:
   schema: 1
 containers:
 - name: kimi-k31-pro
-  image: ghcr.io/tinfoilsh/confidential-kimi-k31-pro@sha256:0000000000000000000000000000000000000000000000000000000000000000
+  image: "ghcr.io/tinfoilsh/confidential-kimi-k31-pro@sha256:5e031c2f377a88a825719dcf6d1bd51cc3b4e50d1374bf9f6b4f633545179617" # v0.0.1
   runtime: nvidia
   read_only: true
   gpus: all

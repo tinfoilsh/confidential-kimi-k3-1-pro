@@ -36,6 +36,10 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(draft['method'],'dspark')
         self.assertEqual(draft['rejection_sample_method'],'standard')
 
+    def test_image_reference_is_quoted_for_the_release_action(self):
+        source = (ROOT/'tinfoil-config.yml').read_text()
+        self.assertRegex(source,r'(?m)^\s*image: "ghcr\.io/[^"\n]+@sha256:[0-9a-f]{64}"')
+
     def test_uniform_target_and_draft_sizes_have_graph_captures(self):
         depth = json.loads(self.option('--speculative-config'))['num_speculative_tokens']
         slots = int(self.option('--max-num-seqs'))

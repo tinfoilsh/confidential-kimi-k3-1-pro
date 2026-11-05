@@ -1,0 +1,97 @@
+--- a/usr/local/lib/python3.12/dist-packages/vllm/envs.py
++++ b/usr/local/lib/python3.12/dist-packages/vllm/envs.py
+@@ -285,6 +285,8 @@
+     VLLM_ENABLE_COHERE_API: bool = False
+     VLLM_HAS_FLASHINFER_CUBIN: bool = False
+     VLLM_ROCM_FP8_MFMA_PAGE_ATTN: bool = False
++    VLLM_DISABLE_UVA: bool = False
++    VLLM_KIMI_K3_LATENT_MOE_TAIL_FUSION: bool = True
+     VLLM_ALLREDUCE_USE_SYMM_MEM: bool = True
+     VLLM_ALLREDUCE_USE_FLASHINFER: bool = True
+     VLLM_ALLREDUCE_USE_FLASHINFER_PCIE_IPC: bool = False
+@@ -2039,6 +2041,10 @@
+     # Whether to use pytorch symmetric memory for allreduce
+     "VLLM_ALLREDUCE_USE_SYMM_MEM": lambda: bool(
+         int(os.getenv("VLLM_ALLREDUCE_USE_SYMM_MEM", "1"))
++    ),
++    "VLLM_DISABLE_UVA": lambda: bool(int(os.getenv("VLLM_DISABLE_UVA", "0"))),
++    "VLLM_KIMI_K3_LATENT_MOE_TAIL_FUSION": lambda: bool(
++        int(os.getenv("VLLM_KIMI_K3_LATENT_MOE_TAIL_FUSION", "1"))
+     ),
+     # Whether to use FlashInfer allreduce
+     "VLLM_ALLREDUCE_USE_FLASHINFER": lambda: bool(
+--- a/usr/local/lib/python3.12/dist-packages/vllm/utils/platform_utils.py
++++ b/usr/local/lib/python3.12/dist-packages/vllm/utils/platform_utils.py
+@@ -9,6 +9,8 @@
+ 
+ import regex as re
+ import torch
++
++import vllm.envs as envs
+ 
+ 
+ def cuda_is_initialized() -> bool:
+@@ -50,6 +52,9 @@
+ @cache
+ def is_uva_available() -> bool:
+     """Check if Unified Virtual Addressing (UVA) is available."""
++    if envs.VLLM_DISABLE_UVA:
++        return False
++
+     # UVA requires pinned memory.
+     from vllm.platforms import current_platform
+ 
+--- a/usr/local/lib/python3.12/dist-packages/vllm/v1/core/sched/scheduler.py
++++ b/usr/local/lib/python3.12/dist-packages/vllm/v1/core/sched/scheduler.py
+@@ -483,6 +483,18 @@
+             and self.kv_cache_manager.mamba_shared_prefix_checkpoint
+         )
+ 
++        mamba_state_block_sizes = {
++            group.kv_cache_spec.block_size
++            for group in kv_cache_config.kv_cache_groups
++            if isinstance(group.kv_cache_spec, MambaSpec)
++        }
++        assert len(mamba_state_block_sizes) <= 1, (
++            "Mamba align scheduling requires one recurrent state block size"
++        )
++        self.mamba_state_block_size = next(
++            iter(mamba_state_block_sizes), self.cache_config.block_size
++        )
++
+         # Counts of non-empty steps scheduled / processed. update_from_output
+         # is called once per scheduled step in FIFO order, so these stay in sync.
+         self.sched_step_seq = 0
+@@ -589,7 +601,7 @@
+         if start >= prefill_end:
+             return num_new_tokens
+ 
+-        block_size = self.cache_config.block_size
++        block_size = self.mamba_state_block_size
+         # The last block-aligned position whose state can be cached. With
+         # Eagle, FullAttn prunes the last matching block, so back off one
+         # block to avoid a Mamba cache miss.
+--- a/usr/local/lib/python3.12/dist-packages/vllm/models/kimi_k3/nvidia/latent_moe_runner.py
++++ b/usr/local/lib/python3.12/dist-packages/vllm/models/kimi_k3/nvidia/latent_moe_runner.py
+@@ -74,7 +74,8 @@
+         # SM100 NVIDIA device; the runner falls back to the default latent
+         # MoE path everywhere else.
+         self.enable_k3_latent_moe_tail_fusion = (
+-            current_platform.is_cuda()
++            envs.VLLM_KIMI_K3_LATENT_MOE_TAIL_FUSION
++            and current_platform.is_cuda()
+             and current_platform.is_device_capability_family(100)
+         )
+         # Overlap the shared-expert all-reduce with the tier-1 up-projection.
+@@ -397,7 +398,10 @@
+         if self.moe_config.tp_size == 1:
+             return norm(hidden_states)
+ 
+-        if flashinfer_trtllm_fused_allreduce_norm is not None:
++        if (
++            envs.VLLM_ALLREDUCE_USE_FLASHINFER
++            and flashinfer_trtllm_fused_allreduce_norm is not None
++        ):
+             ok, max_token_num = _can_use_flashinfer(
+                 hidden_states, self.moe_config.tp_size
+             )

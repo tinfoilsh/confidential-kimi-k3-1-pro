@@ -1,0 +1,8 @@
+**
+!Dockerfile
+!patches/
+!patches/*.patch
+!patches/apply-patches.py
+!patches/source-hashes.json
+!validation/
+!validation/test_*.py

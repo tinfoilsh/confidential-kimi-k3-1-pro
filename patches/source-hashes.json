@@ -1,0 +1,18 @@
+{
+  "vllm/envs.py": {
+    "original_sha256": "4c9530916575af1270c0291c46f393cf3577c1753339199ad43de20a75e42e85",
+    "patched_sha256": "1b77a587ca68f20558942b42fa57ec6ec09f60d51a5fec9ba37754a049aa4188"
+  },
+  "vllm/utils/platform_utils.py": {
+    "original_sha256": "9501968a99185c29094610e252d00569afae20e59313c8e2e197e07370500aef",
+    "patched_sha256": "a46233ffe4f6bb0d8282d1ced12b6a2bd0377d9dfc0e3a51ec2a22ab783c7d7e"
+  },
+  "vllm/v1/core/sched/scheduler.py": {
+    "original_sha256": "3b53ce0e6d10b171dc57e30f3d28b5e7221bc5a3e2911a659f8c9db306de7712",
+    "patched_sha256": "3eb9c581cfbfb01b14d418319d8c8da28e6db4949a840ee07518ca00b1d4245b"
+  },
+  "vllm/models/kimi_k3/nvidia/latent_moe_runner.py": {
+    "original_sha256": "482500cdd5fa123c111e3b15bb92d493359bc5a6af60d9a204ef2bbaab351321",
+    "patched_sha256": "4a177c42acd5651f3272757548415f39a066d0eef1cc3462d32f184be2282021"
+  }
+}

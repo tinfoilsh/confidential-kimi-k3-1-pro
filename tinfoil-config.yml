@@ -1,0 +1,125 @@
+cvm-version: 0.14.17
+cpus: 32
+memory: 524288
+gpus: 8
+models:
+- name: kimi-k31-pro
+  repo: moonshotai/Kimi-K3.1-Pro@6d0a0202956796543364d666ab19c6ad1a494ee1
+  mpk: 8d9c355a94e60f43598713759028328bbe795336f2700799d0ff4f3898e785e0_1561355993088_97fb42e4-45a9-5745-813b-61cb6ddb043d
+  schema: 1
+- name: kimi-k31-pro-dspark
+  repo: Inferact/Kimi-K3.1-Pro-DSpark-preview@5e654fbe920278f228a89519b06b2680aa56480f
+  mpk: 37e89ad461fa86eddb78d2552fc7ddcfff6a5543086c08c8d03164609b2a65ba_5373530112_7541c4f3-f223-5637-a64d-70970f59d421
+  schema: 1
+containers:
+- name: kimi-k31-pro
+  image: ghcr.io/tinfoilsh/confidential-kimi-k31-pro@sha256:0000000000000000000000000000000000000000000000000000000000000000
+  runtime: nvidia
+  read_only: true
+  gpus: all
+  restart: always
+  env:
+  - VLLM_DISABLE_UVA: '1'
+  - VLLM_KIMI_K3_LATENT_MOE_TAIL_FUSION: '0'
+  - VLLM_ALLREDUCE_USE_SYMM_MEM: '0'
+  - VLLM_ALLREDUCE_USE_FLASHINFER: '1'
+  - VLLM_ALLREDUCE_USE_FLASHINFER_PCIE_IPC: '0'
+  - VLLM_USE_NCCL_SYMM_MEM: '0'
+  - VLLM_KIMI_K3_GEMM_AR: '0'
+  - VLLM_ENABLE_GEMM_RS: '0'
+  - NCCL_NVLS_ENABLE: '0'
+  - VLLM_USE_DIRECT_DCP_A2A: '0'
+  - VLLM_USE_DIRECT_DCP_Q_GATHER: '0'
+  - VLLM_USE_DIRECT_DCP_KV_GATHER: '0'
+  - VLLM_ENGINE_READY_TIMEOUT_S: '3600'
+  - VLLM_USE_V2_MODEL_RUNNER: '1'
+  - VLLM_USE_RUST_FRONTEND: '0'
+  - PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  - VLLM_CACHE_ROOT: /root/.cache/vllm
+  - TRITON_CACHE_DIR: /root/.cache/triton
+  - TORCHINDUCTOR_CACHE_DIR: /root/.cache/inductor
+  - TORCH_EXTENSIONS_DIR: /root/.cache/torch-extensions
+  - FLASHINFER_WORKSPACE_BASE: /root/.cache/flashinfer
+  - NUMBA_CACHE_DIR: /root/.cache/numba
+  - VLLM_FLASHINFER_ALLREDUCE_BACKEND: trtllm
+  - FLASHINFER_NO_DOWNLOAD: '1'
+  command:
+  - --model
+  - /tinfoil/mpk/mpk-8d9c355a94e60f43598713759028328bbe795336f2700799d0ff4f3898e785e0
+  - --served-model-name
+  - kimi-k3.1-pro
+  - --tensor-parallel-size
+  - '8'
+  - --decode-context-parallel-size
+  - '1'
+  - --load-format
+  - fastsafetensors
+  - --trust-remote-code
+  - --kv-cache-dtype
+  - fp8
+  - --attention-backend
+  - FLASHINFER_MLA_SPARSE
+  - --attention-config
+  - '{"indexer_kv_dtype":"fp8","use_prefill_query_quantization":true}'
+  - --disable-custom-all-reduce
+  - --mm-encoder-tp-mode
+  - data
+  - --enable-auto-tool-choice
+  - --tool-call-parser
+  - kimi_k3
+  - --reasoning-parser
+  - kimi_k3
+  - --enable-prompt-tokens-details
+  - --enable-force-include-usage
+  - --trust-request-mm-kwargs
+  - --scheduling-policy
+  - priority
+  - --port
+  - '8001'
+  - --max-model-len
+  - '262144'
+  - --max-num-seqs
+  - '32'
+  - --max-num-batched-tokens
+  - '16384'
+  - --enable-prefix-caching
+  - --mamba-cache-mode
+  - align
+  - --mamba-ssm-cache-dtype
+  - float32
+  - --no-enable-flashinfer-autotune
+  - --gpu-memory-utilization
+  - '0.95'
+  - --compilation-config
+  - '{"pass_config":{"fuse_allreduce_rms":false},"cudagraph_capture_sizes":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,24,25,30,32,35,36,40,42,45,48,50,54,55,60,64,65,66,70,72,75,78,80,84,85,90,95,96,100,102,105,108,110,114,115,120,125,126,128,130,132,135,138,140,144,145,150,155,156,160,162,168,174,180,186,192],"max_cudagraph_capture_size":192}'
+  - --additional-config
+  - '{"decode_backend":"auto","kda_spec_decode_backend":"flashinfer"}'
+  - --speculative-config
+  - '{"model":"/tinfoil/mpk/mpk-37e89ad461fa86eddb78d2552fc7ddcfff6a5543086c08c8d03164609b2a65ba","method":"dspark","num_speculative_tokens":5,"draft_sample_method":"probabilistic","rejection_sample_method":"standard","attention_backend":"FLASHINFER_MLA","kv_cache_dtype":"fp8"}'
+  tmpfs:
+    /tmp: size=1g,mode=1777,exec
+    /root: size=20g,mode=0700,exec
+  healthcheck:
+    test:
+    - CMD
+    - curl
+    - -sf
+    - http://localhost:8001/health
+    interval: 30s
+    timeout: 5s
+    start_period: 120m
+shim:
+  upstream-port: 8001
+  authenticated: true
+  authenticated-endpoints:
+  - /v1/chat/completions
+  - /v1/responses
+  - /tokenize
+  - /metrics
+  paths:
+  - /v1/chat/completions
+  - /v1/models
+  - /v1/responses
+  - /tokenize
+  - /metrics
+  - /health

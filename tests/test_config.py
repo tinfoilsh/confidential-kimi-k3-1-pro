@@ -50,6 +50,12 @@ class ConfigTest(unittest.TestCase):
             self.assertIn(count*(depth+1),sizes)
         self.assertGreaterEqual(graphs['max_cudagraph_capture_size'],max(sizes))
 
+    def test_served_name_matches_the_configured_model_and_container(self):
+        served_name = self.option('--served-model-name')
+        self.assertEqual(served_name,'kimi-k3-1-pro')
+        self.assertEqual(self.container['name'],served_name)
+        self.assertEqual(self.config['models'][0]['name'],served_name)
+
     def test_cache_writes_are_supported_by_the_read_only_container(self):
         self.assertTrue(self.container['read_only'])
         self.assertEqual(self.container['restart'],'always')

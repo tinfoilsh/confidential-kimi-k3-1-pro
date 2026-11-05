@@ -3,17 +3,17 @@ cpus: 32
 memory: 524288
 gpus: 8
 models:
-- name: kimi-k31-pro
+- name: kimi-k3-1-pro
   repo: moonshotai/Kimi-K3.1-Pro@6d0a0202956796543364d666ab19c6ad1a494ee1
   mpk: 8d9c355a94e60f43598713759028328bbe795336f2700799d0ff4f3898e785e0_1561355993088_97fb42e4-45a9-5745-813b-61cb6ddb043d
   schema: 1
-- name: kimi-k31-pro-dspark
+- name: kimi-k3-1-pro-dspark
   repo: Inferact/Kimi-K3.1-Pro-DSpark-preview@5e654fbe920278f228a89519b06b2680aa56480f
   mpk: 37e89ad461fa86eddb78d2552fc7ddcfff6a5543086c08c8d03164609b2a65ba_5373530112_7541c4f3-f223-5637-a64d-70970f59d421
   schema: 1
 containers:
-- name: kimi-k31-pro
-  image: ghcr.io/tinfoilsh/confidential-kimi-k31-pro@sha256:0000000000000000000000000000000000000000000000000000000000000000
+- name: kimi-k3-1-pro
+  image: "ghcr.io/tinfoilsh/confidential-kimi-k31-pro@sha256:0000000000000000000000000000000000000000000000000000000000000000" # Rewritten at release.
   runtime: nvidia
   read_only: true
   gpus: all
@@ -47,7 +47,7 @@ containers:
   - --model
   - /tinfoil/mpk/mpk-8d9c355a94e60f43598713759028328bbe795336f2700799d0ff4f3898e785e0
   - --served-model-name
-  - kimi-k3.1-pro
+  - kimi-k3-1-pro
   - --tensor-parallel-size
   - '8'
   - --decode-context-parallel-size

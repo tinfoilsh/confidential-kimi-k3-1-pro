@@ -36,6 +36,10 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(draft['method'],'dspark')
         self.assertEqual(draft['rejection_sample_method'],'standard')
 
+    def test_image_reference_is_quoted_for_the_release_action(self):
+        source = (ROOT/'tinfoil-config.yml').read_text()
+        self.assertRegex(source,r'(?m)^\s*image: "ghcr\.io/[^"\n]+@sha256:[0-9a-f]{64}"')
+
     def test_uniform_target_and_draft_sizes_have_graph_captures(self):
         depth = json.loads(self.option('--speculative-config'))['num_speculative_tokens']
         slots = int(self.option('--max-num-seqs'))
@@ -45,6 +49,12 @@ class ConfigTest(unittest.TestCase):
             self.assertIn(count*depth,sizes)
             self.assertIn(count*(depth+1),sizes)
         self.assertGreaterEqual(graphs['max_cudagraph_capture_size'],max(sizes))
+
+    def test_served_name_matches_the_configured_model_and_container(self):
+        served_name = self.option('--served-model-name')
+        self.assertEqual(served_name,'kimi-k3-1-pro')
+        self.assertEqual(self.container['name'],served_name)
+        self.assertEqual(self.config['models'][0]['name'],served_name)
 
     def test_cache_writes_are_supported_by_the_read_only_container(self):
         self.assertTrue(self.container['read_only'])

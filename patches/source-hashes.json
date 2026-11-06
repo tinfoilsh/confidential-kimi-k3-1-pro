@@ -14,5 +14,9 @@
   "vllm/models/kimi_k3/nvidia/latent_moe_runner.py": {
     "original_sha256": "482500cdd5fa123c111e3b15bb92d493359bc5a6af60d9a204ef2bbaab351321",
     "patched_sha256": "4a177c42acd5651f3272757548415f39a066d0eef1cc3462d32f184be2282021"
+  },
+  "vllm/models/kimi_k3/nvidia/kda.py": {
+    "original_sha256": "d1e719268d0c712f1b48b5d040726deddebf4c8d1c8b81b6cf152bfcf4d931bc",
+    "patched_sha256": "5d1099789a50736b94cd4f171a0f3ea5f283f131df911c8cad157efa2d80ada8"
   }
 }

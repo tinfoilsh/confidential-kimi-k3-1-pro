@@ -1,0 +1,18 @@
+--- a/usr/local/lib/python3.12/dist-packages/vllm/models/kimi_k3/nvidia/kda.py
++++ b/usr/local/lib/python3.12/dist-packages/vllm/models/kimi_k3/nvidia/kda.py
+@@ -1091,6 +1091,7 @@
+         forward_context = get_forward_context()
+         attn_metadata_raw = forward_context.attn_metadata
+         if attn_metadata_raw is None:
++            core_attn_out.zero_()
+             return
+ 
+         from vllm.models.kimi_k3.nvidia.ops.third_party.kda import (
+@@ -1102,6 +1103,7 @@
+         assert isinstance(attn_metadata_raw, dict)
+         attn_metadata_narrowed = attn_metadata_raw.get(self.prefix)
+         if attn_metadata_narrowed is None:
++            core_attn_out.zero_()
+             return
+         assert isinstance(attn_metadata_narrowed, KimiK3KDAMetadata)
+         m = attn_metadata_narrowed

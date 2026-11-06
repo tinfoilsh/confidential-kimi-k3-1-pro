@@ -9,6 +9,8 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 CACHE_KEYS = {'VLLM_CACHE_ROOT','TRITON_CACHE_DIR','TORCHINDUCTOR_CACHE_DIR',
               'TORCH_EXTENSIONS_DIR','FLASHINFER_WORKSPACE_BASE','NUMBA_CACHE_DIR'}
+CONTEXT_LIMIT = 1048576
+ALLOCATOR_SETTINGS = 'expandable_segments:False'
 
 
 class ConfigTest(unittest.TestCase):
@@ -75,6 +77,17 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(int(self.option('--tensor-parallel-size')),self.config['gpus'])
         self.assertGreater(self.config['cpus'],0)
         self.assertGreater(self.config['memory'],0)
+
+    def test_context_parallelism_keeps_compatible_kernels_and_allocations(self):
+        tensor_parallel = int(self.option('--tensor-parallel-size'))
+        context_parallel = int(self.option('--decode-context-parallel-size'))
+        self.assertEqual(context_parallel,tensor_parallel)
+        self.assertEqual(self.option('--dcp-comm-backend'),'a2a')
+        kernel = json.loads(self.option('--kernel-config'))
+        self.assertEqual(kernel['flashinfer_sparse_mla_kernel'],'trtllm')
+        self.assertEqual(int(self.option('--max-model-len')),CONTEXT_LIMIT)
+        for name in ('PYTORCH_ALLOC_CONF','PYTORCH_CUDA_ALLOC_CONF'):
+            self.assertEqual(self.env[name],ALLOCATOR_SETTINGS)
 
 
 if __name__ == '__main__':

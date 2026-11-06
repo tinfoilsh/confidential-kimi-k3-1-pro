@@ -34,7 +34,8 @@ containers:
   - VLLM_ENGINE_READY_TIMEOUT_S: '3600'
   - VLLM_USE_V2_MODEL_RUNNER: '1'
   - VLLM_USE_RUST_FRONTEND: '0'
-  - PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+  - PYTORCH_CUDA_ALLOC_CONF: expandable_segments:False
+  - PYTORCH_ALLOC_CONF: expandable_segments:False
   - VLLM_CACHE_ROOT: /root/.cache/vllm
   - TRITON_CACHE_DIR: /root/.cache/triton
   - TORCHINDUCTOR_CACHE_DIR: /root/.cache/inductor
@@ -51,7 +52,9 @@ containers:
   - --tensor-parallel-size
   - '8'
   - --decode-context-parallel-size
-  - '1'
+  - '8'
+  - --dcp-comm-backend
+  - a2a
   - --load-format
   - fastsafetensors
   - --trust-remote-code
@@ -61,6 +64,8 @@ containers:
   - FLASHINFER_MLA_SPARSE
   - --attention-config
   - '{"indexer_kv_dtype":"fp8","use_prefill_query_quantization":true}'
+  - --kernel-config
+  - '{"flashinfer_sparse_mla_kernel":"trtllm"}'
   - --disable-custom-all-reduce
   - --mm-encoder-tp-mode
   - data
@@ -77,12 +82,14 @@ containers:
   - --port
   - '8001'
   - --max-model-len
-  - '262144'
+  - '1048576'
   - --max-num-seqs
   - '32'
   - --max-num-batched-tokens
   - '16384'
   - --enable-prefix-caching
+  - --prefix-match-unit
+  - '128'
   - --mamba-cache-mode
   - align
   - --mamba-ssm-cache-dtype

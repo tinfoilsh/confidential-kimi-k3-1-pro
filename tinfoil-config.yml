@@ -88,6 +88,8 @@ containers:
   - --max-num-batched-tokens
   - '16384'
   - --enable-prefix-caching
+  - --prefix-match-unit
+  - '128'
   - --mamba-cache-mode
   - align
   - --mamba-ssm-cache-dtype

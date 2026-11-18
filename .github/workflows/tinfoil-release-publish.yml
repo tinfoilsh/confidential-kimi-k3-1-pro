@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Measure image, attest, and publish the release
-        uses: tinfoilsh/measure-image-action@59f7ab5dbe472b3097c888ebe64e6a4131fc0975 # v0.14.0
+        uses: tinfoilsh/measure-image-action@0cd3f814c8bf35428103efa136005cc17310747a # v0.14.3
         with:
           config-file: ${{ github.workspace }}/tinfoil-config.yml
           github-token: ${{ secrets.GITHUB_TOKEN }}
